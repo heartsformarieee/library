@@ -1,2 +1,148 @@
-const starter=[{id:'velvet',title:'Velvet & Venom',author:'M. Vale',fandom:'Original',tags:['Dark romance','Slow burn','Enemies to lovers'],summary:'Two people with excellent reasons to stay away from each other make the deeply inconvenient decision not to.',words:68400,status:'Complete',shelf:'reading',favorite:true,progress:42,chapters:[['The Invitation',`The envelope arrived without a stamp, sealed in wine-red wax. Mara turned it over twice before breaking the seal.\n\nThere were invitations one accepted because they were polite, and invitations one accepted because refusing felt considerably more dangerous. This was unmistakably the second kind.\n\nBy midnight, the old house on Bellweather Hill had every window lit. Mara stood beneath its iron gate and wondered, not for the first time, whether curiosity was simply fear wearing better perfume.`],['The House',`Inside, the house seemed to breathe around its guests. Music drifted from somewhere beyond the staircase, low and distant.\n\nA man in black waited at the end of the corridor as though he had known the exact second she would arrive.\n\n“You came,” he said.\n\n“You sound surprised.”\n\n“No.” His smile was almost one. “Relieved.”`]]},{id:'ashes',title:'Ashes in Bloom',author:'C. Rowan',fandom:'Original',tags:['Gothic','Mystery','Found family'],summary:'A ruined greenhouse, a house full of secrets, and flowers that refuse to stay dead.',words:51200,status:'Complete',shelf:'tbr',favorite:false,progress:0,chapters:[['The Greenhouse',`By spring, everyone in the village had agreed the greenhouse was empty. Everyone except June.\n\nShe saw the light first: a pale gold pulse behind panes clouded with years of dust. Then came the flowers, pushing through cracked tile where nothing had grown for decades.`]]},{id:'orbit',title:'Orbiting You',author:'L. Hart',fandom:'Sci-Fi',tags:['Friends to lovers','Space','Longing'],summary:'Some distances are measured in light-years. Others are measured in all the things you never said.',words:89300,status:'Complete',shelf:'reading',favorite:false,progress:18,chapters:[['Departure',`Earth became a blue coin beneath them, then a marble, then something too small to hold all the people they had left behind.\n\nNia pressed her forehead to the glass. “Still time to turn around.”\n\nSol laughed softly. “You first.”`]]},{id:'thorns',title:'A Crown of Thorns',author:'A. Nocturne',fandom:'Fantasy',tags:['Royalty','Forbidden love','Magic'],summary:'The crown chooses its ruler. Unfortunately, it has terrible taste in romance.',words:104000,status:'Complete',shelf:'finished',favorite:true,progress:100,chapters:[['Coronation',`The crown drew blood before it gave her power. Elara considered that an honest introduction.\n\nBelow the balcony, ten thousand people cheered for a queen who had spent the morning planning her escape.`]]},{id:'rain',title:'When It Rains',author:'S. Grey',fandom:'Original',tags:['Cozy','Romance','Rainy day'],summary:'A tiny bookshop, terrible weather, and the same stranger arriving every Thursday.',words:32700,status:'Complete',shelf:'tbr',favorite:false,progress:0,chapters:[['Thursday',`It rained every Thursday that October. Not Wednesday. Not Friday. Thursday, with the punctuality of an appointment.\n\nAnd every Thursday at four seventeen, the bell above the bookshop door rang.`]]}];
-const saved=JSON.parse(localStorage.getItem('archive-books')||'null');let books=saved||starter;let filter='all',selected=null,chapter=0;const $=s=>document.querySelector(s);const shelf=$('#shelf');function persist(){localStorage.setItem('archive-books',JSON.stringify(books))}function render(){let q=$('#search').value.toLowerCase();let list=books.filter(b=>(filter==='all'||filter==='favorite'?b.favorite:b.shelf===filter)&&(`${b.title} ${b.author} ${b.fandom} ${b.tags.join(' ')}`.toLowerCase().includes(q)));shelf.innerHTML=list.map(b=>`<div class="book-card" data-id="${b.id}"><div class="book"><span>${b.title}</span><i>${b.favorite?'♡':'✦'}</i></div><b>${b.title}</b><small>${b.author}</small><div class="progressbar"><i style="width:${b.progress}%"></i></div></div>`).join('');$('#count').textContent=`${list.length} titles`;$('#readCount').textContent=books.filter(b=>b.shelf==='finished').length;$('#wordCount').textContent=Math.round(books.filter(b=>b.shelf==='finished').reduce((a,b)=>a+b.words,0)/1000)+'k';document.querySelectorAll('.book-card').forEach(x=>x.onclick=()=>openDetail(x.dataset.id))}function openDetail(id){selected=books.find(b=>b.id===id);$('#detailCover').innerHTML=`<span>${selected.title}</span>`;$('#detailFandom').textContent=selected.fandom;$('#detailTitle').textContent=selected.title;$('#detailAuthor').textContent='by '+selected.author;$('#tags').innerHTML=selected.tags.map(t=>`<span>${t}</span>`).join('');$('#summary').textContent=selected.summary;$('#words').textContent=selected.words.toLocaleString()+' words';$('#chapters').textContent=selected.chapters.length+' chapters';$('#status').textContent=selected.status;$('#favBtn').textContent=selected.favorite?'♥ Favorited':'♡ Add to favorites';$('#detail').classList.remove('hidden')}function close(x){$(x).classList.add('hidden')}function openReader(){chapter=Math.min(selected.lastChapter||0,selected.chapters.length-1);selected.shelf='reading';showChapter();$('#reader').classList.remove('hidden');$('#detail').classList.add('hidden');persist();render()}function showChapter(){let c=selected.chapters[chapter];$('#readerTitle').textContent=selected.title;$('#readerChapter').textContent=`CHAPTER ${chapter+1} OF ${selected.chapters.length}`;$('#chapterTitle').textContent=c[0];$('#chapterText').innerHTML=c[1].split(/\n\n/).map(p=>`<p>${p}</p>`).join('');$('#progress').textContent=Math.round((chapter+1)/selected.chapters.length*100)+'%';$('#prevChapter').disabled=chapter===0;$('#nextChapter').textContent=chapter===selected.chapters.length-1?'Finish ✓':'Next →';selected.lastChapter=chapter;selected.progress=Math.max(selected.progress,Math.round((chapter)/selected.chapters.length*100));persist();scrollTo(0,0)}document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelector('nav .active').classList.remove('active');b.classList.add('active');filter=b.dataset.filter;render()});$('#search').oninput=render;$('#closeDetail').onclick=()=>close('#detail');$('#detail').onclick=e=>{if(e.target.id==='detail')close('#detail')};$('#readBtn').onclick=openReader;$('#heroRead').onclick=()=>{selected=books[0];openReader()};$('#favBtn').onclick=()=>{selected.favorite=!selected.favorite;persist();openDetail(selected.id);render()};$('#readerBack').onclick=()=>close('#reader');$('#readerTheme').onclick=()=>$('#reader').classList.toggle('dark');$('#prevChapter').onclick=()=>{if(chapter>0){chapter--;showChapter()}};$('#nextChapter').onclick=()=>{if(chapter<selected.chapters.length-1){chapter++;showChapter()}else{selected.progress=100;selected.shelf='finished';persist();render();close('#reader')}};$('#addBtn').onclick=()=>$('#addSheet').classList.remove('hidden');$('#closeAdd').onclick=()=>close('#addSheet');$('#saveBook').onclick=()=>{let title=$('#newTitle').value.trim(),text=$('#newText').value.trim();if(!title||!text)return alert('Give the book a title and some text ♡');books.unshift({id:Date.now().toString(),title,author:$('#newAuthor').value||'Unknown',fandom:$('#newFandom').value||'Original',tags:$('#newTags').value.split(',').map(x=>x.trim()).filter(Boolean),summary:$('#newSummary').value||'A private addition to The Archive.',words:text.split(/\s+/).length,status:'In progress',shelf:'tbr',favorite:false,progress:0,chapters:[['Chapter One',text]]});persist();render();close('#addSheet');['#newTitle','#newAuthor','#newFandom','#newSummary','#newTags','#newText'].forEach(x=>$(x).value='')};$('#profile').onclick=()=>$('#profileSheet').classList.remove('hidden');$('#closeProfile').onclick=()=>close('#profileSheet');render();
+const demos=[
+ {id:'velvet',title:'Velvet & Venom',author:'M. Vale',fandom:'Original',tags:['Dark romance','Slow burn','Enemies to lovers'],summary:'Two people with excellent reasons to stay away from each other make the deeply inconvenient decision not to.',words:68400,status:'Complete',shelf:'reading',favorite:true,progress:42,chapters:[['The Invitation',`The envelope arrived without a stamp, sealed in wine-red wax. Mara turned it over twice before breaking the seal.\n\nThere were invitations one accepted because they were polite, and invitations one accepted because refusing felt considerably more dangerous. This was unmistakably the second kind.`],['The House',`Inside, the house seemed to breathe around its guests. Music drifted from somewhere beyond the staircase, low and distant.`]]},
+ {id:'ashes',title:'Ashes in Bloom',author:'C. Rowan',fandom:'Original',tags:['Gothic','Mystery','Found family'],summary:'A ruined greenhouse, a house full of secrets, and flowers that refuse to stay dead.',words:51200,status:'Complete',shelf:'tbr',favorite:false,progress:0,chapters:[['The Greenhouse',`By spring, everyone in the village had agreed the greenhouse was empty. Everyone except June.`]]},
+ {id:'orbit',title:'Orbiting You',author:'L. Hart',fandom:'Sci-Fi',tags:['Friends to lovers','Space','Longing'],summary:'Some distances are measured in light-years. Others are measured in all the things you never said.',words:89300,status:'Complete',shelf:'reading',favorite:false,progress:18,chapters:[['Departure',`Earth became a blue coin beneath them, then a marble, then something too small to hold all the people they had left behind.`]]},
+ {id:'thorns',title:'A Crown of Thorns',author:'A. Nocturne',fandom:'Fantasy',tags:['Royalty','Forbidden love','Magic'],summary:'The crown chooses its ruler. Unfortunately, it has terrible taste in romance.',words:104000,status:'Complete',shelf:'finished',favorite:true,progress:100,chapters:[['Coronation',`The crown drew blood before it gave her power. Elara considered that an honest introduction.`]]},
+ {id:'rain',title:'When It Rains',author:'S. Grey',fandom:'Original',tags:['Cozy','Romance','Rainy day'],summary:'A tiny bookshop, terrible weather, and the same stranger arriving every Thursday.',words:32700,status:'Complete',shelf:'tbr',favorite:false,progress:0,chapters:[['Thursday',`It rained every Thursday that October.`]]}
+];
+
+const OFFICIAL_ID='door-radiator';
+const MANUSCRIPT='The door behind the radiator .txt';
+const COVER='thedoorbehindtheradiator.PNG';
+const $=s=>document.querySelector(s);
+const shelf=$('#shelf');
+let filter='all',selected=null,chapter=0,books=[];
+
+function savedState(){try{return JSON.parse(localStorage.getItem('archive-books')||'[]')}catch{return []}}
+function persist(){localStorage.setItem('archive-books',JSON.stringify(books))}
+function escapeHTML(v=''){return v.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+function parseManuscript(raw){
+  const clean=raw.replace(/\r/g,'').replace(/\u2028|\u2029/g,'\n');
+  const heading=/^(Chapter\s+\d+\s*[–—-]\s*.+|Extra\s*[–—-]\s*.+)$/gm;
+  const matches=[...clean.matchAll(heading)];
+  return matches.map((m,i)=>{
+    const start=m.index+m[0].length;
+    const end=i+1<matches.length?matches[i+1].index:clean.length;
+    return [m[0].trim(),clean.slice(start,end).trim()];
+  }).filter(c=>c[1]);
+}
+
+async function loadOfficialBook(){
+  let text='';
+  try{
+    const response=await fetch(encodeURI(MANUSCRIPT),{cache:'no-store'});
+    if(!response.ok)throw new Error('Manuscript failed to load');
+    text=await response.text();
+  }catch(err){console.error(err)}
+  const chapters=parseManuscript(text);
+  const words=text.trim()?text.trim().split(/\s+/).length:0;
+  return {
+    id:OFFICIAL_ID,
+    title:'The Door Behind the Radiator',
+    author:'Marie Dudek',
+    fandom:'Original Horror',
+    tags:['Psychological horror','Other world','Winter','Uncanny','Dark fantasy'],
+    summary:'Fifteen-year-old Michael Petrov hears something whispering through the radiator in his Saint Petersburg apartment. Behind it waits a tiny door, an impossible copy of home, and a world offering warmth, safety and love at a price he cannot afford to pay.',
+    tagline:'Some doors are meant to stay closed.',
+    words,
+    status:'Complete',
+    shelf:'tbr',favorite:false,progress:0,lastChapter:0,
+    cover:COVER,
+    official:true,
+    chapters:chapters.length?chapters:[['Manuscript unavailable','The manuscript could not be loaded. Please refresh the page.']]
+  };
+}
+
+function mergeLibrary(official){
+  const saved=savedState();
+  const previous=saved.find(b=>b.id===OFFICIAL_ID);
+  const progressState=previous?{shelf:previous.shelf,favorite:previous.favorite,progress:previous.progress,lastChapter:previous.lastChapter}:{};
+  const officialMerged={...official,...progressState,chapters:official.chapters,cover:official.cover,words:official.words};
+  const savedCustom=saved.filter(b=>!demos.some(d=>d.id===b.id)&&b.id!==OFFICIAL_ID);
+  const demoMerged=demos.map(d=>{const prior=saved.find(b=>b.id===d.id);return prior?{...d,shelf:prior.shelf,favorite:prior.favorite,progress:prior.progress,lastChapter:prior.lastChapter||0}:d});
+  books=[officialMerged,...demoMerged,...savedCustom];
+  persist();
+}
+
+function coverMarkup(b,detail=false){
+  if(b.cover)return `<img class="real-cover${detail?' detail-image':''}" src="${b.cover}" alt="Cover of ${escapeHTML(b.title)}">`;
+  return `<span>${escapeHTML(b.title)}</span><i>${b.favorite?'♡':'✦'}</i>`;
+}
+
+function render(){
+  const q=$('#search').value.toLowerCase();
+  const list=books.filter(b=>{
+    const matchesFilter=filter==='all'||(filter==='favorite'?b.favorite:b.shelf===filter);
+    const hay=`${b.title} ${b.author} ${b.fandom} ${b.tags.join(' ')}`.toLowerCase();
+    return matchesFilter&&hay.includes(q);
+  });
+  shelf.innerHTML=list.map(b=>`<div class="book-card ${b.official?'official-book':''}" data-id="${b.id}"><div class="book">${coverMarkup(b)}</div><b>${escapeHTML(b.title)}</b><small>${escapeHTML(b.author)}</small><div class="progressbar"><i style="width:${b.progress||0}%"></i></div></div>`).join('');
+  $('#count').textContent=`${list.length} titles`;
+  $('#readCount').textContent=books.filter(b=>b.shelf==='finished').length;
+  $('#wordCount').textContent=Math.round(books.filter(b=>b.shelf==='finished').reduce((a,b)=>a+(b.words||0),0)/1000)+'k';
+  document.querySelectorAll('.book-card').forEach(x=>x.onclick=()=>openDetail(x.dataset.id));
+}
+
+function setupFeatured(){
+  const b=books.find(x=>x.id===OFFICIAL_ID);
+  if(!b)return;
+  $('#heroTitle').textContent=b.title;
+  const heroP=document.querySelector('.hero-copy p');
+  if(heroP)heroP.textContent='Psychological horror · dark fantasy · complete';
+  const heroBook=document.querySelector('.hero-book');
+  if(heroBook){heroBook.innerHTML=`<img class="real-cover" src="${b.cover}" alt="${escapeHTML(b.title)} cover">`;heroBook.classList.add('has-cover')}
+  $('#heroRead').textContent=b.progress>0?'Continue reading →':'Start reading →';
+}
+
+function openDetail(id){
+  selected=books.find(b=>b.id===id);if(!selected)return;
+  $('#detailCover').innerHTML=coverMarkup(selected,true);
+  $('#detailCover').classList.toggle('has-cover',!!selected.cover);
+  $('#detailFandom').textContent=selected.fandom;
+  $('#detailTitle').textContent=selected.title;
+  $('#detailAuthor').textContent='by '+selected.author;
+  $('#tags').innerHTML=selected.tags.map(t=>`<span>${escapeHTML(t)}</span>`).join('');
+  $('#summary').textContent=selected.summary;
+  $('#words').textContent=(selected.words||0).toLocaleString()+' words';
+  $('#chapters').textContent=selected.chapters.length+' chapters';
+  $('#status').textContent=selected.status;
+  $('#favBtn').textContent=selected.favorite?'♥ Favorited':'♡ Add to favorites';
+  $('#readBtn').textContent=selected.progress>0&&selected.progress<100?'CONTINUE READING':'READ NOW';
+  $('#detail').classList.remove('hidden');
+}
+function close(x){$(x).classList.add('hidden')}
+function openReader(){
+  if(!selected)return;
+  chapter=Math.min(selected.lastChapter||0,selected.chapters.length-1);
+  selected.shelf='reading';showChapter();
+  $('#reader').classList.remove('hidden');$('#detail').classList.add('hidden');persist();render();setupFeatured();
+}
+function showChapter(){
+  const c=selected.chapters[chapter];
+  $('#readerTitle').textContent=selected.title;
+  $('#readerChapter').textContent=chapter===selected.chapters.length-1&&/^Extra/.test(c[0])?'EXTRA':`CHAPTER ${chapter+1} OF ${selected.chapters.length}`;
+  $('#chapterTitle').textContent=c[0];
+  $('#chapterText').innerHTML=c[1].split(/\n\s*\n/).filter(Boolean).map(p=>`<p>${escapeHTML(p).replace(/\n/g,'<br>')}</p>`).join('');
+  const pct=Math.round((chapter+1)/selected.chapters.length*100);
+  $('#progress').textContent=pct+'%';
+  $('#prevChapter').disabled=chapter===0;
+  $('#nextChapter').textContent=chapter===selected.chapters.length-1?'Finish ✓':'Next →';
+  selected.lastChapter=chapter;selected.progress=Math.max(selected.progress||0,Math.round(chapter/selected.chapters.length*100));
+  persist();window.scrollTo(0,0);
+}
+
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelector('nav .active').classList.remove('active');b.classList.add('active');filter=b.dataset.filter;render()});
+$('#search').oninput=render;
+$('#closeDetail').onclick=()=>close('#detail');$('#detail').onclick=e=>{if(e.target.id==='detail')close('#detail')};
+$('#readBtn').onclick=openReader;
+$('#heroRead').onclick=()=>{selected=books.find(b=>b.id===OFFICIAL_ID);openReader()};
+$('#favBtn').onclick=()=>{selected.favorite=!selected.favorite;persist();openDetail(selected.id);render()};
+$('#readerBack').onclick=()=>close('#reader');$('#readerTheme').onclick=()=>$('#reader').classList.toggle('dark');
+$('#prevChapter').onclick=()=>{if(chapter>0){chapter--;showChapter()}};
+$('#nextChapter').onclick=()=>{if(chapter<selected.chapters.length-1){chapter++;showChapter()}else{selected.progress=100;selected.shelf='finished';persist();render();setupFeatured();close('#reader')}};
+$('#addBtn').onclick=()=>$('#addSheet').classList.remove('hidden');$('#closeAdd').onclick=()=>close('#addSheet');
+$('#saveBook').onclick=()=>{const title=$('#newTitle').value.trim(),text=$('#newText').value.trim();if(!title||!text)return alert('Give the book a title and some text ♡');books.unshift({id:Date.now().toString(),title,author:$('#newAuthor').value||'Unknown',fandom:$('#newFandom').value||'Original',tags:$('#newTags').value.split(',').map(x=>x.trim()).filter(Boolean),summary:$('#newSummary').value||'A private addition to The Archive.',words:text.split(/\s+/).length,status:'In progress',shelf:'tbr',favorite:false,progress:0,chapters:[['Chapter One',text]]});persist();render();close('#addSheet');['#newTitle','#newAuthor','#newFandom','#newSummary','#newTags','#newText'].forEach(x=>$(x).value='')};
+$('#profile').onclick=()=>$('#profileSheet').classList.remove('hidden');$('#closeProfile').onclick=()=>close('#profileSheet');
+
+(async function init(){const official=await loadOfficialBook();mergeLibrary(official);render();setupFeatured()})();
